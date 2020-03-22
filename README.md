@@ -43,39 +43,29 @@ def gen(camera):
 and what i do here:
 ```python
 def background_thread():
-    """Example of how to send openCV motion frames to clients."""
-    print('start stream.')
-    global history_frames
-    counter = 0
-    _, bg = camera.read()
-    while len(clients) > 0:
+    """send openCV motion frames to clients."""
+    ...
+    while (len(CLIENTS) > 0) or KEEP_DETECT:
         socketio.sleep(1.0 / FPS)
-        try:
-            _, frame = camera.read()
-            diff = FrameDiff(bg, frame)
-            diff.do_default()
-            if diff.count > 0:  # send frames when motion detected.
-                timestamp = round(time.time() * 1000)  # ms
-                history_frames.append(timestamp)
-                history_frames = history_frames[-HISTORY_LIMIT:]
+        _, frame = camera.read()
+        diff = FrameDiff(bg, frame)
+        diff.do_default()
+        if diff.count > 0:  # send frames and notices when motion detected.
+           
+            socketio.emit('update', [int(update_cache[0] / 1000) * 1000, 1, [update_cache[0]]],
+                          namespace='/data')
+        else:
+            if SAVE_MOTION_FRAMES:
                 diff.save('frames/{}.jpg'.format(timestamp))
-                image = cv2.imencode('.jpg', diff.marked_frame)[1]
-                socketio.emit('frames',
-                              image.tobytes(),
-                              namespace='/test')
-                _, bg = camera.read()
-            else:
-                socketio.emit('keep_alive', namespace='/test')
-                counter += 1
-            if counter % 20 == 0:
-                image = cv2.imencode('.jpg', diff.marked_frame)[1]
-                socketio.emit('frames',
-                              image.tobytes(),
-                              namespace='/test')
-        except Exception as e:
-            print(e)
-            socketio.emit('stream_err',
-                          namespace='/test')
+            image = cv2.imencode('.jpg', diff.marked_frame)[1]
+            socketio.emit('move', namespace='/state')
+            socketio.emit('frame',
+                          image.tobytes(),
+                          namespace='/motion')
+            _, bg = camera.read()
+        else:
+            socketio.emit('heartbeat', namespace='/data')
+            socketio.emit('heartbeat', namespace='/state')
 
     global thread
     thread = None
