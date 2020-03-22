@@ -91,7 +91,7 @@ then visit http://127.0.0.1:5000/
 + beautify web page
 
 I'm not familiar with `html` `js` and `css`, and have little experience in programing.
-So, current web page is very ugly, and many function have been finished. I hope someone could help me :)
+So, current web page is very ugly, and many function haven't been finished. I hope someone could help me :)
 
 ## Similar_projects
 https://gist.github.com/n3wtron/4624820 
