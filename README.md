@@ -3,7 +3,7 @@
 ![python3.0+](https://img.shields.io/badge/python-3.0+-blue)
 ![PR](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
-###### **A real-time motion monitor**
+**A real-time motion monitor**
 
 
 ## Table of Contents
@@ -16,7 +16,7 @@
 rtm2 is a real-time motion monitor developed by python3, flask, [socketIO](https://socket.io/) and openCV.
 Unlike [similar projects'](#similar_projects) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket](https://en.wikipedia.org/wiki/WebSocket) protocol only when motion🏃 detected.
 It can avoid unnecessary traffic transfer and send data real-time.
-![demo](doc/demo1.gif)
+![screenshot](doc/chart_page.PNG)
 
 some project transfer base64ed images/frames and decode it after transfer:
 ```python
@@ -84,6 +84,7 @@ def background_thread():
 
 
 ## Install
+
 ```sh
 $ wget https://github.com/def-fun/rtm2/master.zip
 $ unzip master.zip
@@ -96,11 +97,11 @@ then visit http://127.0.0.1:5000/
 
 ## todo
 + optimize network transfer, for example, transfer changed area only.
-+ alarms or vibrate your mobile phone when motion detected.
++ alarms or vibrate your device(mobile phone) when motion detected.
 + beautify web page
 
-I'm not familiar with `html` `js` and `css`, and have little experience in web development.
-So, current web page is very ugly. I hope someone could help me :)
+I'm not familiar with `html` `js` and `css`, and have little experience in programing.
+So, current web page is very ugly, and many function have been finished. I hope someone could help me :)
 
 ## similar_projects
 https://gist.github.com/n3wtron/4624820 
