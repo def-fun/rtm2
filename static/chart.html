@@ -1,0 +1,472 @@
+<html lang="">
+<head>
+    <meta charset="utf-8">
+    <title>Motion frames history - rtm2</title>
+    <script src="/static/jquery-1.12.4.min.js"></script>
+    <script src="/static/echarts.js"></script>
+    <script src="/static/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/myCSS.css">
+    <style>
+        label {
+            line-height: 20px;
+            display: inline-block;
+            color: #777;
+        }
+
+        .radio_type {
+            width: 20px;
+            height: 20px;
+            appearance: none;
+            position: relative;
+        }
+
+        .radio_type:checked:before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 1px solid #1a59b7;
+            background: #1a59b7;
+            display: inline-block;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+
+        .radio_type:checked + label {
+            color: #1a59b7;
+        }
+
+        .button-table {
+            border: 1px solid #2a86ff;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body bgcolor="#f3faf1">
+<!-- <h2><a href="/stream">back to detect mode</a></h2> -->
+<div style="text-align: center;">
+    <div id="main" style="width: 100%;height:30%;min-height: 300px"></div>
+    <table>
+        <tr>
+            <td valign="top">
+                <table class="button-table">
+                    <tr>
+                        <td>
+                            <button class="myButton" id="previous" onclick="show_previous()">previous frame
+                            </button>
+                        </td>
+                        <td>
+                            <button class="myButton" onclick="show_next()">next frame</button>
+                        </td>
+                    <tr>
+                        <td>
+                            <button class="myButton" onclick="to_first_frame()">first frame</button>
+                        </td>
+                        <td>
+                            <button class="myButton" onclick="to_last_frame()">last frame</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button class="myButton" onclick="unzoom()">unzoom</button>
+                        </td>
+                        <td>
+                            <button class="myButton" onclick="zoom_5_min()">zoom to 5min</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button class="myButton" onclick="release_old_data()">release old data</button>
+                        </td>
+                        <td>
+                            <button class="myButton" onclick="load_all_data()">load all data</button>
+                        </td>
+                    </tr>
+                    <!--  <tr>
+                              <td colspan="2">
+                                  <div>
+                                      <span>update frame history real-time</span>
+                                      <input type="checkbox" name="switch1" id="switch1" class="choose-btn"
+                                             data-toggle="on|off">
+                                      <label for="switch1" class="choose-label"></label>
+                                      <span class="choose-text"></span>
+                                  </div>
+                              </td>
+                          </tr> -->
+                </table>
+                <table class="button-table">
+                    <tr>
+                        <td>
+                            <div id='notice'
+                                 style='background: #B7B706;color:#ffffff;overflow: hidden;padding:5px;text-align:center;width: 140px;height: 22px;'>
+                                wait...
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>stream mode</span>
+                        </td>
+                    </tr>
+                    <tr width="80px">
+                        <td colspan="2">
+                            <input class="radio_type" type="radio" name="type" id="radio1" onclick="close_stream()"/>
+                            <label for="radio1">[close]</label>
+                            <input class="radio_type" type="radio" name="type" id="radio2" onclick="motion_mode()"
+                                   checked="checked"/>
+                            <label for="radio2">motion</label>
+                            <input class="radio_type" type="radio" name="type" id="radio3" onclick="live_mode()"/>
+                            <label for="radio3">live</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>debug info</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="/clients_list"><span id="clients">?</span> clients online</a>
+                            <span id="debug">  </span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <div style="padding:5px;text-align: center;">
+                    <div><span id="timestamp"> </span> <span id="date"></span></div>
+                    <img id="frame" src="" alt="" style="width:auto;max-width: 1000px;margin:0 auto;">
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<script type="text/javascript">
+    let data_socket = io('/data', {autoConnect: false});
+    let motion_socket = io('/motion', {autoConnect: false});
+    let live_socket = io('/live', {autoConnect: false});
+    let timestamp_index = 0;
+    let timestamps = [];
+    let option = {};
+    const myChart = echarts.init(document.getElementById('main'));
+    data_socket.open();
+    motion_mode(); // start motion stream
+
+    /* todo https://stackoverflow.com/questions/23092624/socket-io-removing-specific-listener
+     $(".choose-btn").on("change", function () {
+            let texts = $(this).attr('data-toggle').split('|');
+            $(this).siblings('.choose-text').text(this.checked ? texts[0] : texts[1]);
+            if (this.checked === true) {
+                motion_socket.open();
+                motion_socket.on('frame', function (msg) {
+                    let blob = new Blob([msg], {type: 'image/jpeg'});
+                    document.getElementById('frame').src = window.URL.createObjectURL(blob);
+                });
+            } else {
+                motion_socket.disconnect();
+                motion_socket.close();
+            }
+        }); */
+
+    function motion_mode() {
+        motion_socket.open();
+        motion_socket.on('frame', function (msg) {
+            let blob = new Blob([msg], {type: 'image/jpeg'});
+            document.getElementById('frame').src = window.URL.createObjectURL(blob);
+        });
+        live_socket.close();
+    }
+
+    function live_mode() {
+        live_socket.open();
+        live_socket.on('frame', function (msg) {
+            let blob = new Blob([msg], {type: 'image/jpeg'});
+            document.getElementById('frame').src = window.URL.createObjectURL(blob);
+        });
+        motion_socket.open();
+        motion_socket.on('frame', function (msg) {
+            let blob = new Blob([msg], {type: 'image/jpeg'});
+            document.getElementById('frame').src = window.URL.createObjectURL(blob);
+        });
+    }
+
+    function close_stream() {
+        motion_socket.close();
+        live_socket.close();
+    }
+
+    // some event
+    data_socket.on('clients_num', function (msg) {
+        document.getElementById("clients").textContent = msg.count;
+    });
+    data_socket.on('move', function () {
+        document.getElementById('debug').textContent = 'motion detected!';
+    });
+    data_socket.on('update', function () {
+        document.getElementById('notice').textContent = 'online';
+        document.getElementById('notice').style.background = "#1a59b7"
+    });
+    data_socket.on('heartbeat', function () {
+        document.getElementById('notice').textContent = 'online';
+        document.getElementById('notice').style.background = "#1a59b7"
+    });
+    data_socket.on('connect_timeout', function () {
+        console.log('connect_timeout');
+        document.getElementById('notice').textContent = 'connect timeout';
+        document.getElementById('notice').style.background = '#EE0A08';
+    });
+    data_socket.on('disconnect', function () {
+        console.log('disconnect');
+        document.getElementById('notice').textContent = 'disconnected';
+        document.getElementById('notice').style.background = '#EE0A08';
+    });
+    data_socket.on('connect_error', function () {
+        console.log('connect_error');
+        document.getElementById('notice').textContent = 'connect error';
+        document.getElementById('notice').style.background = '#EE0A08';
+    });
+    data_socket.on('error', function () {
+        console.log('error');
+        document.getElementById('notice').textContent = 'error';
+        document.getElementById('notice').style.background = '#EE0A08';
+    });
+
+    function zoom_5_min() {
+        option.dataZoom[0].startValue = timestamps[timestamp_index] - 300000;
+        option.dataZoom[0].endValue = timestamps[timestamp_index];
+        myChart.setOption(option);
+        delete option.dataZoom[0].startValue;
+        delete option.dataZoom[0].endValue;
+        myChart.resize()
+    }
+
+    function to_last_frame() {
+        timestamp_index = timestamps.length - 1;
+        view_this(timestamp_index);
+        zoom_5_min();
+    }
+
+    function to_first_frame() {
+        timestamp_index = 0;
+        view_this(timestamp_index);
+        zoom_5_min();
+    }
+
+    function unzoom() {
+        myChart.setOption(option, true)
+    }
+
+    function release_old_data() {
+        let data = option.series[0].data.slice(-1000); // save last 1000 data
+        option.series[0].data = data;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i][1] !== 0) {
+                timestamps = timestamps.concat(data[i][2])
+            }
+        }
+        timestamp_index = timestamps.length - 1;
+        view_this(timestamp_index);
+        myChart.setOption(option, true)
+    }
+
+    function load_all_data() {
+        myChart.showLoading({
+            text: 'loading'
+        });
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    timestamps = [];
+                    const data = JSON.parse(xhr.response);
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i][1] !== 0) {
+                            timestamps = timestamps.concat(data[i][2])
+                        }
+                    }
+                    option.series[0].data = data;
+                    myChart.setOption(option, true);
+                    myChart.hideLoading();
+                }
+            }
+        };
+        xhr.open('get', '/api?q=frames_list&num=all', true);
+        xhr.send(null);
+    }
+
+    myChart.showLoading({
+        text: 'loading'
+    });
+
+    let xhr = new XMLHttpRequest();
+    $(document).ready(function () {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.response);
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i][1] !== 0) {
+                            timestamps = timestamps.concat(data[i][2])
+                        }
+                    }
+                    timestamp_index = timestamps.length - 1;
+                    option = {
+                        title: {
+                            text: 'Motion frames history ',
+                            left: 'center'
+                        },
+                        toolbox: {
+                            // feature: {
+                            //     dataZoom: {
+                            //        yAxisIndex: false
+                            //   },
+                            // saveAsImage: {
+                            //   pixelRatio: 2
+                            //      }
+                            //}
+                            feature: {
+                                dataView: {
+                                    show: true
+                                },
+                                restore: {
+                                    show: true
+                                },
+                                dataZoom: {
+                                    show: true
+                                },
+                                saveAsImage: {
+                                    show: true
+                                },
+                            }
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        grid: {
+                            x: 50,
+                            x2: 30,
+                        },
+                        dataZoom: [{
+                            type: 'inside'
+                        }, {
+                            type: 'slider'
+                        }],
+                        xAxis: {
+                            data: data.map(function (item) {
+                                return item[0];
+                            }),
+                            axisLabel: {
+                                textStyle: {
+                                    color: 'rgba(2,1,29)',
+                                    fontSize: 14,
+                                }
+                            },
+                            type: 'time',
+                            silent: false,
+                            splitLine: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            },
+                        },
+                        yAxis: {
+                            type: 'value',
+                            splitArea: {
+                                show: false
+                            },
+                            min: 0,
+                            axisLabel: {
+                                textStyle: {
+                                    color: 'rgba(2,1,29)',
+                                    fontSize: 14,
+                                }
+                            },
+                        },
+                        series: [{
+                            type: 'bar',
+                            data: data,
+                            barWidth: '100%',
+                            barGap: '0%',
+                            animation: false,
+                            // Set `large` for large data amount
+                            large: true,
+                            markLine: {
+                                symbol: 'circle',
+                                label: {
+                                    position: 'end'
+                                },
+                                data: [{
+                                    silent: false,
+                                    lineStyle: {
+                                        type: 'solid',
+                                        color: '#1425FA',
+                                    },
+                                    xAxis: timestamps[timestamps.length - 1]
+                                }]
+                            }
+                        }]
+                    };
+                    myChart.setOption(option, false, false);
+                    myChart.hideLoading();
+                    view_this(timestamp_index);
+                    data_socket.on('update', function (msg) {
+                        if (msg[2].length > 0) {
+                            timestamps = timestamps.concat(msg[2]);
+                            option.series[0].data.push(msg);
+                            myChart.setOption(option, false, false)
+                        }
+                    });
+                    window.onresize = myChart.resize; // resize myChart when window size changed
+                    myChart.on('click', function (obj) {
+                        console.log(obj);
+                        if (obj.componentType === 'series') {
+                            const t0 = obj.data[2][0];
+                            timestamp_index = timestamps.indexOf(t0);
+                            view_this(timestamp_index); // show frame and mark it in chart
+                        }
+                    });
+
+                }
+            }
+
+        };
+        xhr.open('get', '/api?q=frames_list&num=1000', true);
+        xhr.send(null);
+    });
+
+    function show_previous() {
+        if (timestamp_index > 0) {
+            timestamp_index -= 1;
+        } else {
+            alert('this is the first frame')
+        }
+        view_this(timestamp_index)
+    }
+
+    function show_next() {
+        if (timestamp_index < timestamps.length - 1) {
+            timestamp_index += 1;
+        } else {
+            alert('this is the last frame')
+        }
+        view_this(timestamp_index)
+    }
+
+    function view_this(timestamp_index) {
+        if (typeof (option) !== 'undefined') {
+            option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
+            myChart.setOption(option, false, false)
+        }
+        const img = document.getElementById('frame');
+        img.src = '/frames/' + timestamps[timestamp_index] + '.jpg';
+        document.getElementById('date').innerText = new Date(timestamps[timestamp_index]);
+        document.getElementById('timestamp').innerText = timestamps[timestamp_index];
+    }
+</script>
+</body>
+</html>
