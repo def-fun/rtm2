@@ -7,12 +7,12 @@
 
 
 ## Table of Contents
-- [introduction](#introduction)
-- [Install and usage](#install)
-- [Todo](#todo)
-- [Similar projects](#similar_projects)
+- [Introduction](#Introduction)
+- [Install and usage](#Install)
+- [Todo](#Todo)
+- [Similar projects](#Similar_projects)
 
-## introduction
+## Introduction
 rtm2 is a real-time motion monitor developed by python3, flask, [socketIO](https://socket.io/) and openCV.
 Unlike [similar projects'](#similar_projects) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket](https://en.wikipedia.org/wiki/WebSocket) protocol only when motion🏃 detected.
 It can avoid unnecessary traffic transfer and send data real-time.
@@ -85,7 +85,7 @@ $ python3 app.py
 then visit http://127.0.0.1:5000/
 
 
-## todo
+## Todo
 + optimize network transfer, for example, transfer changed area only.
 + alarms or vibrate your device(mobile phone) when motion detected.
 + beautify web page
@@ -93,7 +93,7 @@ then visit http://127.0.0.1:5000/
 I'm not familiar with `html` `js` and `css`, and have little experience in programing.
 So, current web page is very ugly, and many function have been finished. I hope someone could help me :)
 
-## similar_projects
+## Similar_projects
 https://gist.github.com/n3wtron/4624820 
 https://github.com/Kr1s77/flask-video-streaming-recorder 
 https://www.geeksforgeeks.org/webcam-motion-detector-python/ 
