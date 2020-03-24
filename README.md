@@ -105,7 +105,7 @@ $ cd master/
 $ pip3 install -r requirements.txt
 $ gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000  # ubuntu
 ```
-then visit http://127.0.0.1:5000/
+
 
 If terminal shows something like:
 ```
@@ -129,6 +129,10 @@ Open cmd
 > python app.py
 ```
 
+Then visit http://127.0.0.1:5000/ 
+Detecting will start after the first visit. The default stream mode is detect mode, which can avoid lots of network traffic, as image shown below.
+![detect mode vs stream mode](doc/detect_mode_vs_live_mode.PNG)
+
 
 ## Todo
 + optimize network transfer, for example, transfer changed area only.
@@ -136,8 +140,11 @@ Open cmd
 + beautify web page
 + face recognition, YOLO, and so on
 
-I'm have little experience in programing. So, current web page is ugly, and many function haven't been finished. I hope you can help me :)
-Pull requests are welcome. 
+I'm have little experience in programing. So, current web page is ugly,  many function haven't been finished, and English README need to be polished. 
+I hope you can help me.
+
+Pull requests are welcome :)
+
 
 ## Similar_works
 https://www.pyimagesearch.com/2019/04/15/live-video-streaming-over-network-with-opencv-and-imagezmq/
