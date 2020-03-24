@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-# see https://github.com/miguelgrinberg/Flask-SocketIO/blob/master/example/app.py
+# author: https://github.com/def-fun
+# repo: https://github.com/def-fun/rtm2
+# modified from https://github.com/miguelgrinberg/Flask-SocketIO/blob/master/example/app.py
 from threading import Lock
 from flask import Flask, send_from_directory, request, render_template, jsonify
 from flask_compress import Compress
@@ -36,7 +38,7 @@ KEEP_DETECT = True
 # update frames even no motion detected every UPDATE_FREQ frames
 # set 0 to disable update, set 1 to send every frame to clients.
 
-async_mode = None
+async_mode = "eventlet"
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
 # the best option based on installed packages.
@@ -95,7 +97,6 @@ def query_something():
     q = request.args.get('q')
     num = request.args.get('num')
     print(request.args)
-    print(q, num)
     if q == 'frames_list':
         tmp = OLD_TIMESTAMPS_OUT + timestamps2xyz(NEW_TIMESTAMPS)
         if num == 'all':
@@ -184,8 +185,8 @@ def when_connect():
     global thread
     global CLIENTS
     CLIENTS[request.sid] = {'ip': request.headers.environ['REMOTE_ADDR'], 'connectAt': time.time(),
-                            'header': request.headers.environ['headers_raw']}
-    # print('connect:', request.sid)
+                            'header': request.headers}
+    print('new connect with sid:', request.sid)
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(background_thread)
