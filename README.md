@@ -19,7 +19,7 @@ English | [‰∏≠Êñá](README-zh.md)
 
 ## Introduction
 **rtm2** is a real-time motion monitor developed by python3, flask, [socketIO](https://socket.io/) and openCV.
-Unlike [similar projects'](#Similar_works) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket protocol](https://en.wikipedia.org/wiki/WebSocket) only when motionÌ†ºÌøÉ detected.
+Unlike [similar projects'](#Similar_works) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket protocol](https://en.wikipedia.org/wiki/WebSocket) only when motionüèÉ detected.
 It can send data real-time and avoid unnecessary traffic transfer.
 
 There are many motion detecting projects that combined openCV with web. As far as I know, clients get frames that captured by openCV in the way of solutions shown below, mainly.
