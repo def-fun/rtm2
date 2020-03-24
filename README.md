@@ -22,7 +22,7 @@ English | [中文](README-zh.md)
 Unlike [similar projects'](#Similar_works) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket protocol](https://en.wikipedia.org/wiki/WebSocket) only when motion🏃 detected.
 It can send data real-time and avoid unnecessary traffic transfer.
 
-There are many motion detecting projects that combined openCV with web. As far as I know, clients get frames that captured by openCV in the way of solutions shown below, mainly.
+There are many motion detecting projects that combined openCV with network. As far as I know, clients get frames that captured by openCV in the way of solutions shown below, mainly.
 
  **1. ajax/xhr polling** <br>
  clients(browser) send query to server every N seconds:
@@ -77,8 +77,8 @@ disadvantage: you can't view frames on browser, you have to write/install a new 
  **4. ffmpeg + rtmp** <br>
 
  **5. [websocket](https://en.wikipedia.org/wiki/WebSocket) protocol** <br>
-when server have frames to send to clients:
- + server send frames url to clients using websocket protocol, then client(browser) execute `img.src='http://domain.com/img/1.jpg'`
+when server have frames to send to clients, it may:
+ + send frames url to clients using websocket protocol, then client(browser) execute `img.src='http://domain.com/img/1.jpg'`
  
    Modifying `img.src` too frequently would cause image url changed before it loaded, which lead to no image is shown.
    But, this is a good solution when the frame rate is very low.
