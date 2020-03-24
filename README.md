@@ -99,7 +99,7 @@ when server have frames to send to clients, it may:
 ## Install
 ### ubuntu
 ```shell script
-$ wget https://github.com/def-fun/rtm2/master.zip
+$ wget https://github.com/def-fun/rtm2/archive/master.zip
 $ unzip master.zip
 $ cd master/
 $ pip3 install -r requirements.txt
