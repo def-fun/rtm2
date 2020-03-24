@@ -134,10 +134,10 @@ Open cmd
 + optimize network transfer, for example, transfer changed area only.
 + alarms or vibrate your device(mobile phone) when motion detected.
 + beautify web page
++ face recognition, YOLO, and so on
 
-I'm not familiar with `html` `js` and `css`, and have little experience in programing.
-So, current web page is very ugly, and many function haven't been finished. I hope someone could help me :)
-
+I'm have little experience in programing. So, current web page is ugly, and many function haven't been finished. I hope you can help me :)
+Pull requests are welcome. 
 
 ## Similar_works
 https://www.pyimagesearch.com/2019/04/15/live-video-streaming-over-network-with-opencv-and-imagezmq/
