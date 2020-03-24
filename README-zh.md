@@ -54,7 +54,7 @@ openCV负责抓取视频帧和比较视频帧之间的区别。发现区别后�
 ## Install
 ### ubuntu
 ```shell script
-$ wget https://github.com/def-fun/rtm2/master.zip
+$ wget https://github.com/def-fun/rtm2/archive/master.zip
 $ unzip master.zip
 $ cd master/
 $ sudo apt install python3 python3-pip
@@ -84,11 +84,11 @@ new connect with sid: e90e133a208d492392415439678f2006
 ```
 
 ### windows
-安装好python之后，下载[master.zip](https://github.com/def-fun/rtm2/master.zip) ，解压，打开cmd，cd到master目录
+安装好python之后，下载[master.zip](https://github.com/def-fun/rtm2/archive/master.zip) ，解压，打开cmd，cd到master目录
 ```
-1. cd master/
-1. pip install -r requirements.txt
-python app.py
+> cd master/
+> pip install -r requirements.txt
+> python3 app.py
 ```
 
 启动之后，需要有一次浏览器访问，移动侦测才会工作。浏览器打开http://127.0.0.1:5000/即可。
@@ -104,8 +104,9 @@ python app.py
 + 优化网络传输，比如只传输发生变化的区域
 + 检测到变化时，使手机发生震动、响铃、打开LED等
 + ~~美化网页~~
++ 人脸识别，YOLO，balabala
 
-~~我对开发不熟悉，~~希望各位大佬多多指教
+~~我对开发不熟悉，~~ 希望各位大佬多多指教
 
 
 ## Similar_works
