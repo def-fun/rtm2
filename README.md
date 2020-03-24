@@ -2,10 +2,13 @@
 
 ![python3.0+](https://img.shields.io/badge/python-3.0+-blue)
 ![PR](https://img.shields.io/badge/PRs-welcome-brightgreen)
+
 English | [‰∏≠Êñá](README-zh.md)
 
 **A real-time motion monitor**
+
 ![screenshot](doc/chart_page.PNG)
+
 
 ## Table of Contents
 - [Introduction](#Introduction)
@@ -13,65 +16,84 @@ English | [‰∏≠Êñá](README-zh.md)
 - [Todo](#Todo)
 - [Similar projects](#Similar_works)
 
+
 ## Introduction
 **rtm2** is a real-time motion monitor developed by python3, flask, [socketIO](https://socket.io/) and openCV.
-Unlike [similar projects'](#Similar_works) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket](https://en.wikipedia.org/wiki/WebSocket) protocol only when motionüèÉ detected.
-It can avoid unnecessary traffic transfer and send data real-time.
+Unlike [similar projects'](#Similar_works) transferring every frame to clients, rtm2 send frames and notices to clients using [websocket protocol](https://en.wikipedia.org/wiki/WebSocket) only when motionÌ†ºÌøÉ detected.
+It can send data real-time and avoid unnecessary traffic transfer.
+
+There are many motion detecting projects that combined openCV with web. As far as I know, clients get frames that captured by openCV in the way of solutions shown below, mainly.
+
+ **1. ajax/xhr polling** <br>
+ clients(browser) send query to server every N seconds:
+ ```javascript
+function check_update() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('get','/some/url/to/check/update',true);
+    xhr.send();
+    if(xhr.readyState === 4){
+        if(xhr.status === 200){
+            // function to show image
+        }
+    }
+}
+setInterval(check_update, 1000)
+```
+It's not real-time and could cause heavy server load.
 
 
-some project transfer base64ed images/frames and decode it after transfer:
+ **2. [multipart](https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html) protocal** <br>
+ clients browser
+ ```html
+<img src="{{ url_for('video_feed') }}">
+```
+ server
 ```python
-def video_thread():
-    print('send')
+def gen():
+    """Video streaming generator function."""
     while True:
-        image = cv2.imencode('.jpg', frame)[1]
-        base64_data = base64.b64encode(image)
-        s = base64_data.decode()
-        server.send_message_to_all(s)
-```
-
-and some project transfer all frames to clients:
-```python
-def gen(camera):
-    frame = camera.getFrame()
-    while frame != None:
+        read_return_code, frame = vc.read()
+        encode_return_code, image_buffer = cv2.imencode('.jpg', frame)
+        io_buf = io.BytesIO(image_buffer)
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-        time.sleep(0.06)
-        frame = camera.getFrame()
-```
+               b'Content-Type: image/jpeg\r\n\r\n' + io_buf.read() + b'\r\n')
 
-and what i do here:
-```python
-def background_thread():
-    """send openCV motion frames to clients."""
-    ...
-    while (len(CLIENTS) > 0) or KEEP_DETECT:
-        socketio.sleep(1.0 / FPS)
-            _, frame = camera.read()
-            diff = FrameDiff(bg, frame)
-            diff.do_default()
-        if diff.count > 0:  # send frames and notices when motion detected.
-           
-            socketio.emit('update', [int(update_cache[0] / 1000) * 1000, 1, [update_cache[0]]],
-                          namespace='/data')
-        else:
-            if SAVE_MOTION_FRAMES:
-                diff.save('frames/{}.jpg'.format(timestamp))
-                image = cv2.imencode('.jpg', diff.marked_frame)[1]
-            socketio.emit('move', namespace='/state')
-            socketio.emit('frame',
-                              image.tobytes(),
-                          namespace='/motion')
-                _, bg = camera.read()
-            else:
-            socketio.emit('heartbeat', namespace='/data')
-            socketio.emit('heartbeat', namespace='/state')
 
-    global thread
-    thread = None
-    print('exit stream.')
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
 ```
+Sending every frame to clients can cause lots of unnecessary traffic transfer.
+It's suitable for live streaming, but may not suitable for monitor. 
+What's more, it's easy to disconnect.
+
+
+ **3. [imageZMQ](https://github.com/jeffbass/imagezmq)** <br>
+advantage: real-time and distributable
+
+disadvantage: you can't view frames on browser, you have to write/install a new program on your device.
+
+ **4. ffmpeg + rtmp** <br>
+
+ **5. [websocket](https://en.wikipedia.org/wiki/WebSocket) protocol** <br>
+when server have frames to send to clients:
+ + server send frames url to clients using websocket protocol, then client(browser) execute `img.src='http://domain.com/img/1.jpg'`
+ 
+   Modifying `img.src` too frequently would cause image url changed before it loaded, which lead to no image is shown.
+   But, this is a good solution when the frame rate is very low.
+   
+ + encode frame with base4, then send base64 string to clients using websocket protocol
+ 
+   It cause meaningless calculation and increase amount of data to transfer.
+   
+ + send frame binary(converted to jpg) to clients directly using websocket protocol. Then execute js shown below to display image.
+ 
+ ```js
+    let blob = new Blob([msg], {type: 'image/jpeg'});
+    img.src = window.URL.createObjectURL(blob);
+ ```
+   This is the solution that I used. 
 
 
 ## Install
@@ -85,37 +107,26 @@ $ gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000  # ubuntu
 ```
 then visit http://127.0.0.1:5000/
 
-
 If terminal shows something like:
 ```
 [ WARN:0] global /io/opencv/modules/videoio/src/cap_v4l.cpp (802) open VIDEOIO ERROR: V4L: can't open camera by index 0
 ```
-it means you need to install right webcam drive (note: you can get driver from http://www.ideasonboard.org/uvc/),
+it means you need to install right webCamera drive (note: you can get driver from http://www.ideasonboard.org/uvc/),
  or run command with `sudo`.
 ```shell script
 [def@ubuntu ~/rtm2/rtm2]$ which gunicorn 
 /home/def/.local/bin/gunicorn
 [def@ubuntu ~/rtm2/rtm2]$ sudo /home/def/.local/bin/gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000
-[2020-03-23 11:35:17 +0800] [4861] [INFO] Starting gunicorn 20.0.4
-[2020-03-23 11:35:17 +0800] [4861] [INFO] Listening at: http://0.0.0.0:5000 (4861)
-[2020-03-23 11:35:17 +0800] [4861] [INFO] Using worker: eventlet
-[2020-03-23 11:35:17 +0800] [4864] [INFO] Booting worker with pid: 4864
-ImmutableMultiDict([('num', '1000'), ('q', 'frames_list')])
-new connect with sid: 24cae136c62b429caf12f21e31d8727e
-start detection.
-clients num now: 1
-ImmutableMultiDict([('num', '1000'), ('q', 'frames_list')])
-new connect with sid: e90e133a208d492392415439678f2006
-
 ```
+
 
 ### windows
 install python3 first, then download [master.zip](https://github.com/def-fun/rtm2/master.zip) and uncompressed it.
 Open cmd
-```
-1. cd master/
-1. pip install -r requirements.txt
-python app.py
+```cmd
+> cd master/
+> pip install -r requirements.txt
+> python app.py
 ```
 
 
@@ -126,6 +137,7 @@ python app.py
 
 I'm not familiar with `html` `js` and `css`, and have little experience in programing.
 So, current web page is very ugly, and many function haven't been finished. I hope someone could help me :)
+
 
 ## Similar_works
 https://www.pyimagesearch.com/2019/04/15/live-video-streaming-over-network-with-opencv-and-imagezmq/
