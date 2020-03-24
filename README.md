@@ -103,7 +103,7 @@ $ wget https://github.com/def-fun/rtm2/master.zip
 $ unzip master.zip
 $ cd master/
 $ pip3 install -r requirements.txt
-$ gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000  # ubuntu
+$ gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000 
 ```
 
 
@@ -114,9 +114,9 @@ If terminal shows something like:
 it means you need to install right webCamera drive (note: you can get driver from http://www.ideasonboard.org/uvc/),
  or run command with `sudo`.
 ```shell script
-[def@ubuntu ~/rtm2/rtm2]$ which gunicorn 
+$ which gunicorn 
 /home/def/.local/bin/gunicorn
-[def@ubuntu ~/rtm2/rtm2]$ sudo /home/def/.local/bin/gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000
+$ sudo /home/def/.local/bin/gunicorn --worker-class eventlet -w 1 app:app -b 0.0.0.0:5000
 ```
 
 
