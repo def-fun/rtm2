@@ -7,7 +7,7 @@ from flask import Flask, send_from_directory, request, render_template, jsonify
 from flask_compress import Compress
 from flask_socketio import SocketIO
 import cv2
-import time 
+import time
 import os
 # import platform
 from driver import FrameDiff, timestamps2xyz
@@ -60,7 +60,8 @@ FRAMES_IN_MEM = dict()  # {timestamp1: frame_binary1, timestamp2: frame_binary2}
 NEW_TIMESTAMPS = []  # frames timestamps that obtained from last run
 OLD_TIMESTAMPS = []  # old frames timestamps list
 for i in os.listdir('frames'):
-    OLD_TIMESTAMPS.append(int(i.split('.')[0]))
+    if i.endswith('.jpg'):
+        OLD_TIMESTAMPS.append(int(i.split('.')[0]))
 OLD_TIMESTAMPS_OUT = timestamps2xyz(sorted(OLD_TIMESTAMPS))
 
 
