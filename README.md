@@ -129,7 +129,9 @@ Open cmd
 > python app.py
 ```
 
-Then visit http://127.0.0.1:5000/ 
+Then visit http://127.0.0.1:5000/  
+(default username is `user` and password is `change_it`)
+
 Detecting will start after the first visit. The default stream mode is detect mode, which can avoid lots of network traffic, as image shown below.
 ![detect mode vs stream mode](doc/detect_mode_vs_live_mode.PNG)
 
