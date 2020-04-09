@@ -6,6 +6,7 @@ from threading import Lock
 from flask import Flask, send_from_directory, request, render_template, jsonify
 from flask_compress import Compress
 from flask_socketio import SocketIO
+from flask_httpauth import HTTPBasicAuth
 import cv2
 import time
 import os
@@ -50,6 +51,21 @@ app = Flask(__name__)
 Compress(app)
 app.config['SECRET_KEY'] = 'secret!!!'
 socketio = SocketIO(app, async_mode=async_mode)
+auth = HTTPBasicAuth()
+users = {
+    'user': 'change_it'
+}
+
+
+@auth.get_password
+def get_pwd(username):
+    print(request.headers)
+    if username in users:
+        return users.get(username)
+    else:
+        return None
+
+
 thread = None
 thread_lock = Lock()
 if KEEP_DETECT:
@@ -72,17 +88,20 @@ def favicon():
 
 @app.route('/')
 @app.route('/index.html')
+@auth.login_required
 def index():
     # return send_from_directory(filename='stream.html', directory='static')
     return send_from_directory(filename='chart.html', directory='static')
 
 
 @app.route('/static/<filename>')
+@auth.login_required
 def static_file(filename):
     return send_from_directory(filename=filename, directory='static')
 
 
 @app.route('/frames/<filename>.jpg')
+@auth.login_required
 def show_history(filename):
     timestamp = int(filename)
     if timestamp in FRAMES_IN_MEM:
@@ -94,6 +113,7 @@ def show_history(filename):
 
 
 @app.route('/api')
+@auth.login_required
 def query_something():
     q = request.args.get('q')
     num = request.args.get('num')
