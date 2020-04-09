@@ -90,7 +90,6 @@ def favicon():
 @app.route('/index.html')
 @auth.login_required
 def index():
-    # return send_from_directory(filename='stream.html', directory='static')
     return send_from_directory(filename='chart.html', directory='static')
 
 
@@ -147,53 +146,53 @@ def background_thread():
     update_cache = [round(time.time() * 1000), ]
     while (len(CLIENTS) > 0) or KEEP_DETECT:
         socketio.sleep(1.0 / FPS)
-        # try:
-        _, frame = camera.read()
-        diff = FrameDiff(bg, frame)
-        diff.do_default()
-        if diff.count > 0:  # send frames and notices when motion detected.
-            timestamp = round(time.time() * 1000)  # ms
-            if len(update_cache) > 0:
-                if int(update_cache[0] / 1000) == int(timestamp / 1000):
+        try:
+            _, frame = camera.read()
+            diff = FrameDiff(bg, frame)
+            diff.do_default()
+            if diff.count > 0:  # send frames and notices when motion detected.
+                timestamp = round(time.time() * 1000)  # ms
+                if len(update_cache) > 0:
+                    if int(update_cache[0] / 1000) == int(timestamp / 1000):
+                        update_cache.append(timestamp)
+                    elif len(update_cache) == 1:
+                        socketio.emit('update', [int(update_cache[0] / 1000) * 1000, 1, [update_cache[0]]],
+                                      namespace='/data')
+                        update_cache = []
+                    elif len(update_cache) > 1:
+                        update_pack = list(timestamps2xyz(update_cache)[0])
+                        socketio.emit('update', update_pack, namespace='/data')
+                        update_cache = []
+                else:
                     update_cache.append(timestamp)
-                elif len(update_cache) == 1:
-                    socketio.emit('update', [int(update_cache[0] / 1000) * 1000, 1, [update_cache[0]]],
-                                  namespace='/data')
-                    update_cache = []
-                elif len(update_cache) > 1:
-                    update_pack = list(timestamps2xyz(update_cache)[0])
-                    socketio.emit('update', update_pack, namespace='/data')
-                    update_cache = []
+                NEW_TIMESTAMPS.append(timestamp)
+                if SAVE_MOTION_FRAMES:
+                    diff.save('frames/{}.jpg'.format(timestamp))
+                image = cv2.imencode('.jpg', diff.marked_frame)[1]
+                FRAMES_IN_MEM[timestamp] = image.tobytes()
+                FRAMES_IN_MEM = {k: v for k, v in FRAMES_IN_MEM.items() if
+                                 k in sorted(FRAMES_IN_MEM.keys())[-FRAMES_IN_MEM_LIMIT:]}
+                socketio.emit('move', namespace='/state')
+                socketio.emit('frame',
+                              image.tobytes(),
+                              namespace='/motion')
+                _, bg = camera.read()
             else:
-                update_cache.append(timestamp)
-            NEW_TIMESTAMPS.append(timestamp)
-            if SAVE_MOTION_FRAMES:
-                diff.save('frames/{}.jpg'.format(timestamp))
-            image = cv2.imencode('.jpg', diff.marked_frame)[1]
-            FRAMES_IN_MEM[timestamp] = image.tobytes()
-            FRAMES_IN_MEM = {k: v for k, v in FRAMES_IN_MEM.items() if
-                             k in sorted(FRAMES_IN_MEM.keys())[-FRAMES_IN_MEM_LIMIT:]}
-            socketio.emit('move', namespace='/state')
-            socketio.emit('frame',
-                          image.tobytes(),
-                          namespace='/motion')
-            _, bg = camera.read()
-        else:
-            socketio.emit('heartbeat', namespace='/data')
-            socketio.emit('heartbeat', namespace='/state')
-            image = cv2.imencode('.jpg', diff.marked_frame)[1]
-            socketio.emit('frame', image.tobytes(), namespace='/live')
-            # if UPDATE_FREQ != 0:
-            #     counter += 1
-            #     if counter % UPDATE_FREQ == 0:
-            #         counter = 0
-            #         image = cv2.imencode('.jpg', diff.marked_frame)[1]
-            #         socketio.emit('frame',
-            #                       image.tobytes(),
-            #                       namespace='/stream')
-        # except Exception as e:
-        #     print(e)
-        #     socketio.emit('stream_err', {'data': str(e)}, namespace='/state')
+                socketio.emit('heartbeat', namespace='/data')
+                socketio.emit('heartbeat', namespace='/state')
+                image = cv2.imencode('.jpg', diff.marked_frame)[1]
+                socketio.emit('frame', image.tobytes(), namespace='/live')
+                # if UPDATE_FREQ != 0:
+                #     counter += 1
+                #     if counter % UPDATE_FREQ == 0:
+                #         counter = 0
+                #         image = cv2.imencode('.jpg', diff.marked_frame)[1]
+                #         socketio.emit('frame',
+                #                       image.tobytes(),
+                #                       namespace='/stream')
+        except Exception as e:
+            print(e)
+            socketio.emit('stream_err', {'data': str(e)}, namespace='/state')
 
     global thread
     thread = None
@@ -228,5 +227,5 @@ def when_disconnect():
 
 
 if __name__ == '__main__':
-    # run this script with "python3 app.py"
+    # run this script with `python3 app.py` instead of `flask run`
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
