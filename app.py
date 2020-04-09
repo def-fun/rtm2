@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # author: https://github.com/def-fun
 # repo: https://github.com/def-fun/rtm2
-# modified from https://github.com/miguelgrinberg/Flask-SocketIO/blob/master/example/app.py
+# based on https://github.com/miguelgrinberg/Flask-SocketIO/blob/master/example/app.py
 from threading import Lock
 from flask import Flask, send_from_directory, request, render_template, jsonify
 from flask_compress import Compress
