@@ -83,7 +83,7 @@ when server have frames to send to clients, it may:
    Modifying `img.src` too frequently would cause image url changed before it loaded, which lead to no image is shown.
    But, this is a good solution when the frame rate is very low.
    
- + encode frame with base4, then send base64 string to clients using websocket protocol
+ + encode frames with base64, then send base64 string to clients using websocket protocol
  
    It cause meaningless calculation and increase amount of data to transfer.
    
