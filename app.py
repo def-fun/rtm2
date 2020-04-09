@@ -21,16 +21,17 @@ from driver import FrameDiff, timestamps2xyz
 # elif platform.system() == 'Linux':
 #     camera = cv2.VideoCapture('/dev/video0')
 camera = cv2.VideoCapture(0)
+# camera = cv2.VideoCapture('vtest.avi')
 # your camera
 
 FPS = 30
 # frames per second, it based on your device performance. I think 10~40 is ok.
 
 SAVE_MOTION_FRAMES = True
-# save motion frames to disk
+# save all motion frames to disk
 
 FRAMES_IN_MEM_LIMIT = 64
-# motion frames that cached in memory and would be shown in web page.
+# motion frames that cached in memory and can be shown in web page.
 
 KEEP_DETECT = True
 # set False to keep detect run only when clients num > 0
@@ -69,7 +70,7 @@ def get_pwd(username):
 thread = None
 thread_lock = Lock()
 if KEEP_DETECT:
-    CLIENTS = {'sid_for_keep_detect': {'ip': 'x', 'header': (('User-Agent', 'x'),)}}
+    CLIENTS = {'locker': {'ip': 'x', 'header': (('User-Agent', 'x'),)}}
 else:
     CLIENTS = dict()
 FRAMES_IN_MEM = dict()  # {timestamp1: frame_binary1, timestamp2: frame_binary2}
@@ -111,6 +112,16 @@ def show_history(filename):
         return send_from_directory(directory='static', filename='image_not_found.jpg')
 
 
+def get_frame():
+    try:
+        _, frame = camera.read()
+        return frame
+    except Exception as e:
+        print(e)
+        socketio.emit('err', str(e), namespace='/state')
+        return cv2.imread('./static/stream_error.jpg')
+
+
 @app.route('/api')
 @auth.login_required
 def query_something():
@@ -123,31 +134,27 @@ def query_something():
             return jsonify(tmp)
         else:
             return jsonify(tmp[-int(num):])
-
-
-@app.route('/clients_list')
-def show_clients():
-    return render_template('clients.html',
-                           clients=[{'sid': k, 'ip': v['ip'], 'header': v['header']} for k, v in CLIENTS.items()])
+    elif q == 'clients_list':
+        return render_template('clients.html',
+                               clients=[{'sid': k, 'ip': v['ip'], 'header': v['header']} for k, v in CLIENTS.items()])
+    else:
+        return 'undefined var.'
 
 
 def background_thread():
     """send openCV motion frames to clients."""
     print('start detection.')
-    # camera = cv2.VideoCapture(r'VID_20200317_120013.mp4')
     global FRAMES_IN_MEM
     global NEW_TIMESTAMPS
     # counter = 0
-    try:
-        _, bg = camera.read()
-    except Exception as e:
-        print(e)
-        socketio.emit('stream_err', {'data': str(e)}, namespace='/state')
+    # global camera
+    # camera = cv2.VideoCapture('vtest.avi')
+    bg = get_frame()
     update_cache = [round(time.time() * 1000), ]
     while (len(CLIENTS) > 0) or KEEP_DETECT:
         socketio.sleep(1.0 / FPS)
         try:
-            _, frame = camera.read()
+            frame = get_frame()
             diff = FrameDiff(bg, frame)
             diff.do_default()
             if diff.count > 0:  # send frames and notices when motion detected.
@@ -173,10 +180,8 @@ def background_thread():
                 FRAMES_IN_MEM = {k: v for k, v in FRAMES_IN_MEM.items() if
                                  k in sorted(FRAMES_IN_MEM.keys())[-FRAMES_IN_MEM_LIMIT:]}
                 socketio.emit('move', namespace='/state')
-                socketio.emit('frame',
-                              image.tobytes(),
-                              namespace='/motion')
-                _, bg = camera.read()
+                socketio.emit('frame', image.tobytes(), namespace='/motion')
+                bg = get_frame()
             else:
                 socketio.emit('heartbeat', namespace='/data')
                 socketio.emit('heartbeat', namespace='/state')
@@ -192,7 +197,7 @@ def background_thread():
                 #                       namespace='/stream')
         except Exception as e:
             print(e)
-            socketio.emit('stream_err', {'data': str(e)}, namespace='/state')
+            socketio.emit('err', str(e), namespace='/state')
 
     global thread
     thread = None
@@ -214,13 +219,15 @@ def when_connect():
     if len(FRAMES_IN_MEM) > 0:
         socketio.emit('frame', FRAMES_IN_MEM[max(FRAMES_IN_MEM.keys())], namespace='/motion')
     else:
-        _, frame = camera.read()
+        frame = get_frame()
         image = cv2.imencode('.jpg', frame)[1]
         socketio.emit('frame', image.tobytes(), namespace='/motion')
 
 
 @socketio.on('disconnect', namespace='/data')
+@socketio.on('disconnect', namespace='/state')
 def when_disconnect():
+    global CLIENTS
     del CLIENTS[request.sid]
     socketio.emit('clients_num', {'unit': 'stream_clients', 'count': len(CLIENTS)}, namespace='/data')
     print('clients num now:', len(CLIENTS))
