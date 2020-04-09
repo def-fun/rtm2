@@ -6,16 +6,16 @@
 
 </head>
 <body>
-<h2><a href="/stream">back to streams</a></h2>
+<h2><span><a href="/">charts page</a>    <a href="/static/alarm.html">alarm page</a></span></h2>
 
 <div>
-    <table  border="1">
+    <table border="1">
         <tr>
-                <td><span>sid, ip</span><br></td>
-                <td>
-                    <span>headers</span>
-                </td>
-            </tr>
+            <td><span>sid, ip</span><br></td>
+            <td>
+                <span>headers</span>
+            </td>
+        </tr>
         {% for item in clients %}
             <tr>
                 <td><span>{{ item.sid }}</span><br><span>{{ item.ip }}</span></td>

@@ -5,3 +5,4 @@ requests==2.22.0
 Flask_Compress==1.4.0
 Flask_HTTPAuth==3.3.0
 gunicorn
+eventlet
