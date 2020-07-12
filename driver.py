@@ -25,6 +25,7 @@ class FrameDiff:
         self.marked_frame = None
         self.count = 0
         self.area_limit = 400  # 800
+        self.area = 0
 
     # def ssim(self):
     #     self.count = 0
@@ -59,10 +60,11 @@ class FrameDiff:
                 (x, y, w, h) = cv2.boundingRect(c)
                 cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 self.count += 1
+                self.area += w * h
         self.marked_frame = mark_time(self.frame)
 
     def save(self, path):
-        cv2.imwrite(path, self.marked_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        cv2.imwrite(path, self.marked_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
 
     def show(self):
         cv2.imshow('marked_frame', self.marked_frame)
