@@ -7,14 +7,13 @@
 每秒钟最多保存2个画面
 支持实时直播
 """
-from threading import Lock
-import requests
-import cv2
-import time
 import json
-import os
+import time
+import cv2
+import requests
+
 # import platform
-from driver import FrameDiff, timestamps2xyz
+from driver import FrameDiff
 
 #######################################
 #           configure start           #
@@ -32,7 +31,7 @@ camera = cv2.VideoCapture(0)
 FPS = CONF.get('fps')
 # frames per second, it based on your device performance. I think 10~40 is ok.
 
-SAVE_MOTION_FRAMES = False
+UPLOAD_MOTION_FRAMES = True
 # save all motion frames to disk
 
 FRAMES_IN_MEM_LIMIT = 64
@@ -42,28 +41,27 @@ FRAMES_IN_MEM_LIMIT = 64
 #           configure end             #
 #######################################
 
-
-FRAMES_IN_MEM = dict()  # {timestamp1: frame_binary1, timestamp2: frame_binary2}
-NEW_TIMESTAMPS = []  # frames timestamps that obtained from last run
-OLD_TIMESTAMPS = []  # old frames timestamps list
-for i in os.listdir('frames'):
-    if i.endswith('.jpg'):
-        OLD_TIMESTAMPS.append(int(i.split('.')[0]))
-OLD_TIMESTAMPS_OUT = timestamps2xyz(sorted(OLD_TIMESTAMPS))
 INTERVAL = 1.0 / FPS
 
 
 def upload(image_path, timestamp, try_count=0):
+    print('debug: upload()', image_path, try_count)
     try_count += 1
     if try_count > 3:
         return
     # files = {'file': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel', {'Expires': '0'})}
     files = {'file': open(image_path, 'rb')}
-    r2 = requests.post('http://{}/upload/{}/{}'.format(CONF['server'], CONF['cid'], timestamp), files=files, timeout=5)
-    if r2.text == 'ok':
-        return
-    else:
-        time.sleep(1)
+    try:
+        r = requests.post('http://{}/api/upload/{}/{}'.format(CONF['server'], CONF['cid'], timestamp), files=files,
+                          timeout=10)
+        print(r.text)
+        if r.text == 'ok':
+            return
+        else:
+            time.sleep(1)
+            upload(image_path, timestamp, try_count)
+    except Exception as e:
+        print('retry upload...')
         upload(image_path, timestamp, try_count)
 
 
@@ -71,14 +69,18 @@ def report(timestamp, info, try_count=0):
     try_count += 1
     if try_count > 3:
         return
-    r = requests.post('http://{}/api/report/{}'.format(CONF['server'], CONF['cid']), timeout=3, data=info,
-                      auth=(CONF['cid'], CONF['token']))
-    if r.text == 'ok':
-        return
-    else:
-        print('retry to report...')
-        time.sleep(1)
-        report(timestamp, info)
+    try:
+        r = requests.post('http://{}/api/report/{}'.format(CONF['server'], CONF['cid']), timeout=3, data=info,
+                          auth=(CONF['cid'], CONF['token']))
+        if r.text == 'ok':
+            return
+        else:
+            print('retry to report...')
+            time.sleep(1)
+            report(timestamp, info, try_count)
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as e:
+        print('debug report()', e)
+        report(timestamp, info, try_count)
 
 
 def get_frame():
@@ -93,8 +95,6 @@ def get_frame():
 def main():
     """detect and send motion frames to server."""
     print('start detection.')
-    global FRAMES_IN_MEM
-    global NEW_TIMESTAMPS
     last_upload_at = time.time()
     last_report_at = time.time()
     # global camera
@@ -109,9 +109,9 @@ def main():
         if diff.count > 0:  # send frames and notices when motion detected.
             print('diff: {}, area: {}'.format(diff.count, diff.area))
             timestamp = round(time.time() * 1000)  # ms
-            report(timestamp, info='motion detected!', try_count=0)
+            report(timestamp, info='move', try_count=0)
 
-            if SAVE_MOTION_FRAMES and (time.time() - last_upload_at > 0.5):
+            if UPLOAD_MOTION_FRAMES and (time.time() - last_upload_at > 0.5):
                 # image = cv2.imencode('.jpg', diff.marked_frame)[1]
                 # image.tobytes()
                 save_path = 'frames/{}.jpg'.format(timestamp)
