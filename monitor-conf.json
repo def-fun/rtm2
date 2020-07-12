@@ -1,0 +1,7 @@
+{
+    "cid": "pi3",
+    "token": "token28394",
+    "desc": "raspberry pi3 cam",
+    "fps": 20,
+    "server": "127.0.0.1:5011"
+}
