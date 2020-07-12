@@ -19,7 +19,7 @@ from driver import FrameDiff, timestamps2xyz
 #######################################
 #           configure start           #
 #######################################
-CONF = json.load(open('client-conf.json'))
+CONF = json.load(open('monitor-conf.json'))
 print(CONF)
 # if platform.system() == 'Windows':
 #     camera = cv2.VideoCapture(0)
@@ -59,7 +59,7 @@ def upload(image_path, timestamp, try_count=0):
         return
     # files = {'file': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel', {'Expires': '0'})}
     files = {'file': open(image_path, 'rb')}
-    r2 = requests.post('http://%s/upload/%s/%s'.format(CONF['server'], CONF['cid'], timestamp), files=files, timeout=10)
+    r2 = requests.post('http://{}/upload/{}/{}'.format(CONF['server'], CONF['cid'], timestamp), files=files, timeout=5)
     if r2.text == 'ok':
         return
     else:
@@ -71,11 +71,12 @@ def report(timestamp, info, try_count=0):
     try_count += 1
     if try_count > 3:
         return
-    r = requests.post('http://%s/api/report/%s'.format(CONF['server'], CONF['cid']), timeout=5, data=info,
+    r = requests.post('http://{}/api/report/{}'.format(CONF['server'], CONF['cid']), timeout=3, data=info,
                       auth=(CONF['cid'], CONF['token']))
     if r.text == 'ok':
         return
     else:
+        print('retry to report...')
         time.sleep(1)
         report(timestamp, info)
 
@@ -95,32 +96,36 @@ def main():
     global FRAMES_IN_MEM
     global NEW_TIMESTAMPS
     last_upload_at = time.time()
+    last_report_at = time.time()
     # global camera
     # camera = cv2.VideoCapture('vtest.avi')
     bg = get_frame()
     while True:
         time.sleep(INTERVAL)
-        try:
-            frame = get_frame()
-            diff = FrameDiff(bg, frame)
-            diff.do_default()
-            if diff.count > 0:  # send frames and notices when motion detected.
-                timestamp = round(time.time() * 1000)  # ms
-                report(timestamp, info='motion detected!', try_count=0)
+        # try:
+        frame = get_frame()
+        diff = FrameDiff(bg, frame)
+        diff.do_default()
+        if diff.count > 0:  # send frames and notices when motion detected.
+            print('diff: {}, area: {}'.format(diff.count, diff.area))
+            timestamp = round(time.time() * 1000)  # ms
+            report(timestamp, info='motion detected!', try_count=0)
 
-                if SAVE_MOTION_FRAMES and (time.time() - last_upload_at > 0.5):
-                    # image = cv2.imencode('.jpg', diff.marked_frame)[1]
-                    # image.tobytes()
-                    save_path = 'frames/{}.jpg'.format(timestamp)
-                    diff.save(save_path)
-                    upload(save_path, timestamp, try_count=0)
-                    last_upload_at = time.time()
+            if SAVE_MOTION_FRAMES and (time.time() - last_upload_at > 0.5):
+                # image = cv2.imencode('.jpg', diff.marked_frame)[1]
+                # image.tobytes()
+                save_path = 'frames/{}.jpg'.format(timestamp)
+                diff.save(save_path)
+                upload(save_path, timestamp, try_count=0)
+                last_upload_at = time.time()
 
-                bg = get_frame()
-            else:
+            bg = get_frame()
+        else:
+            if time.time() - last_report_at > 0.5:
                 report(time.time(), 'online', try_count=0)
-        except Exception as e:
-            print(e)
+                last_report_at = time.time()
+        # except Exception as e:
+        #     print(e)
 
 
 if __name__ == '__main__':
