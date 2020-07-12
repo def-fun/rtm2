@@ -11,6 +11,8 @@ import json
 import time
 import cv2
 import requests
+import os
+import datetime
 
 # import platform
 from driver import FrameDiff
@@ -42,6 +44,9 @@ FRAMES_IN_MEM_LIMIT = 64
 #######################################
 
 INTERVAL = 1.0 / FPS
+for d in ['dumps', 'frames']:
+    if not os.path.isdir(d):
+        os.mkdir(d)
 
 
 def upload(image_path, timestamp, try_count=0):
@@ -61,7 +66,7 @@ def upload(image_path, timestamp, try_count=0):
             time.sleep(1)
             upload(image_path, timestamp, try_count)
     except Exception as e:
-        print('retry upload...')
+        print('retry upload...', e)
         upload(image_path, timestamp, try_count)
 
 
@@ -100,6 +105,9 @@ def main():
     # global camera
     # camera = cv2.VideoCapture('vtest.avi')
     bg = get_frame()
+    date_m = datetime.datetime.now().strftime('%Y-%m-%d %H:%M') + ':00'
+    min_stamp = time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S"))
+    stamps = {'stamps': [], 'min_stamp': min_stamp, 'date': date_m, 'cid': CONF['cid']}
     while True:
         time.sleep(INTERVAL)
         # try:
@@ -110,6 +118,16 @@ def main():
             print('diff: {}, area: {}'.format(diff.count, diff.area))
             timestamp = round(time.time() * 1000)  # ms
             report(timestamp, info='move', try_count=0)
+            if timestamp / 1000 - min_stamp < 60:
+                stamps['stamps'].append(timestamp)
+            else:
+                dump_path = 'dumps/{}.json'.format(int(min_stamp))
+                print('save dump:', dump_path)
+                stamps['count'] = len(stamps['stamps'])
+                json.dump(stamps, open(dump_path, 'w'))
+                date_m = datetime.datetime.now().strftime('%Y-%m-%d %H:%M') + ':00'
+                min_stamp = time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S"))
+                stamps = {'stamps': [], 'min_stamp': min_stamp, 'date': date_m, 'cid': CONF['cid']}
 
             if UPLOAD_MOTION_FRAMES and (time.time() - last_upload_at > 0.5):
                 # image = cv2.imencode('.jpg', diff.marked_frame)[1]
