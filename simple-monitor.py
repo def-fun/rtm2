@@ -31,7 +31,7 @@ camera = cv2.VideoCapture(0)
 # camera = cv2.VideoCapture('vtest.avi')
 # your camera
 
-FPS = CONF.get('fps', 20)
+FPS = CONF.get('fps')
 # frames per second, it based on your device performance. I think 10~40 is ok.
 
 UPLOAD_MOTION_FRAMES = True
@@ -51,6 +51,7 @@ for d in ['dumps', 'frames']:
 
 
 def upload(image_path, timestamp, try_count=0):
+    return
     print('debug: upload()', image_path, try_count)
     try_count += 1
     if try_count > 3:
@@ -72,6 +73,7 @@ def upload(image_path, timestamp, try_count=0):
 
 
 def report(timestamp, info, try_count=0):
+    return
     try_count += 1
     if try_count > 3:
         return
@@ -118,7 +120,7 @@ def main():
         if diff.count > 0:  # send frames and notices when motion detected.
             print('diff: {}, area: {}'.format(diff.count, diff.area))
             timestamp = round(time.time() * 1000)  # ms
-            report(timestamp, info='move', try_count=0)
+            # report(timestamp, info='move', try_count=0)
             if timestamp / 1000 - min_stamp < 60:
                 stamps['stamps'].append(timestamp)
             else:

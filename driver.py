@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 import time
 import json
 
+timeOffset = timedelta(hours=8)
 es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4))
 
 
 def mark_time(frame):
-    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    time_str = (datetime.utcnow() + timeOffset).strftime("%Y-%m-%d %H:%M:%S")
     color = (255, 255, 255)
     position = (20, 20)
     cv2.putText(frame, time_str, position, cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 1)
