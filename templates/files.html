@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>show files</title>
+
+</head>
+<body>
+{#<h2><span><a href="/">charts page</a>    <a href="/static/alarm.html">alarm page</a></span></h2>#}
+
+<div>
+    <table border="1">
+        <tr>
+            <td><span>sid, ip</span><br></td>
+            <td>
+                <span>headers</span>
+            </td>
+        </tr>
+        {% for file_path in files %}
+            <tr>
+                <td><span>{{ file_path }}</span></td>
+                <td>
+                    <img src="{{ file_path }}">
+                </td>
+            </tr>
+
+
+        {% endfor %}
+    </table>
+</div>
+</body>
+</html>
