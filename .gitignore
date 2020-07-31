@@ -1,0 +1,3 @@
+/dumps/other/*.json
+/dumps/*.json
+/.idea/*
