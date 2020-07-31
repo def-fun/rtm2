@@ -109,7 +109,7 @@ def main():
     # camera = cv2.VideoCapture('vtest.avi')
     bg = get_frame()
     date_m = (datetime.utcnow() + timeOffset).strftime('%Y-%m-%d %H:%M') + ':00'
-    min_stamp = time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S"))
+    min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
     stamps = {'stamps': [], 'min_stamp': min_stamp, 'date': date_m, 'cid': CONF['cid']}
     while True:
         time.sleep(INTERVAL)
@@ -124,12 +124,12 @@ def main():
             if timestamp / 1000 - min_stamp < 60:
                 stamps['stamps'].append(timestamp)
             else:
-                dump_path = 'dumps/{}.json'.format(int(min_stamp))
+                dump_path = 'dumps/{}.json'.format(min_stamp)
                 print('save dump:', dump_path)
                 stamps['count'] = len(stamps['stamps'])
                 json.dump(stamps, open(dump_path, 'w'))
                 date_m = (datetime.utcnow() + timeOffset).strftime('%Y-%m-%d %H:%M') + ':00'
-                min_stamp = time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S"))
+                min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
                 stamps = {'stamps': [], 'min_stamp': min_stamp, 'date': date_m, 'cid': CONF['cid']}
 
             if UPLOAD_MOTION_FRAMES and (time.time() - last_upload_at > 0.5):
