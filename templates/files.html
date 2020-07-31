@@ -3,29 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <title>show files</title>
-
+    <script src="/static/jquery-1.12.4.min.js"></script>
+    <script src="/static/echarts.js"></script>
 </head>
 <body>
 {#<h2><span><a href="/">charts page</a>    <a href="/static/alarm.html">alarm page</a></span></h2>#}
+<div id="main" style="width: 100%;height:30%;min-height: 300px"></div>
 
+<script type="application/javascript">
+    const myChart = echarts.init(document.getElementById('main'));
+    myChart.showLoading({
+        text: 'loading'
+    });
+
+    let xhr = new XMLHttpRequest();
+    let timestamps = [];
+    let timestamp_index = 0;
+    let data;
+    $(document).ready(function () {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    data = JSON.parse(xhr.response);
+                    for (let i = 0; i < data.length; i++) {
+                        timestamps.push(data[i].min_stamp);
+                    }
+                    timestamp_index = timestamps.length - 1;
+                    option = {
+                        title: {
+                            text: 'Motion frames history ',
+                            left: 'center'
+                        },
+                        toolbox: {
+                            // feature: {
+                            //     dataZoom: {
+                            //        yAxisIndex: false
+                            //   },
+                            // saveAsImage: {
+                            //   pixelRatio: 2
+                            //      }
+                            //}
+                            feature: {
+                                dataView: {
+                                    show: true
+                                },
+                                restore: {
+                                    show: true
+                                },
+                                dataZoom: {
+                                    show: true
+                                },
+                                saveAsImage: {
+                                    show: true
+                                },
+                            }
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        grid: {
+                            x: 50,
+                            x2: 30,
+                        },
+                        dataZoom: [{
+                            type: 'inside'
+                        }, {
+                            type: 'slider'
+                        }],
+                        xAxis: {
+                            data: data.map(function (item) {
+                                return item.min_stamp;
+                            }),
+                            axisLabel: {
+                                textStyle: {
+                                    color: 'rgba(2,1,29)',
+                                    fontSize: 14,
+                                }
+                            },
+                            type: 'time',
+                            silent: false,
+                            splitLine: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            },
+                        },
+                        yAxis: {
+                            type: 'value',
+                            splitArea: {
+                                show: false
+                            },
+                            min: 0,
+                            axisLabel: {
+                                textStyle: {
+                                    color: 'rgba(2,1,29)',
+                                    fontSize: 14,
+                                }
+                            },
+                        },
+                        series: [{
+                            type: 'bar',
+                            data: data.map(function (item) {
+                                return [item.min_stamp, item.stamps.length];
+                            }),
+                            barWidth: '100%',
+                            barGap: '0%',
+                            animation: false,
+                            // Set `large` for large data amount
+                            large: false,
+                            markLine: {
+                                symbol: 'circle',
+                                label: {
+                                    position: 'end'
+                                },
+                                data: [{
+                                    silent: false,
+                                    lineStyle: {
+                                        type: 'solid',
+                                        color: '#1425FA',
+                                    },
+                                    xAxis: timestamps[timestamps.length - 1]
+                                }]
+                            }
+                        }]
+                    };
+                    myChart.setOption(option, false, false);
+                    myChart.hideLoading();
+                    {#view_this(timestamp_index);#}
+                    window.onresize = myChart.resize; // resize myChart when window size changed
+                    myChart.on('click', function (obj) {
+                        console.log(obj);
+
+                        if (obj.componentType === 'series') {
+                            timestamp_index = obj.dataIndex;
+                            view_this(timestamp_index); // show frame and mark it in chart
+                        }
+                    });
+
+                }
+            }
+
+        };
+        xhr.open('get', '/api/data', true);
+        xhr.send(null);
+
+        function view_this(timestamp_index) {
+            option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
+            myChart.setOption(option, false, false);
+            var t = document.getElementById("images");
+            t.innerHTML = data[timestamp_index].date + "的数据";
+            for (var i = 0; i < data[timestamp_index].stamps.length; i++) {
+                var tr = document.createElement("tr");
+                var td = document.createElement("td");
+                // td.innerHTML = "数据: " + data[timestamp_index].stamps[i];
+                td.innerHTML = '<img src="' + '/frames/' + data[timestamp_index].stamps[i] + '.jpg"' + '>';
+                tr.appendChild(td);
+                t.appendChild(tr);
+            }
+        }
+    });
+</script>
 <div>
-    <table border="1">
-        <tr>
-            <td><span>sid, ip</span><br></td>
-            <td>
-                <span>headers</span>
-            </td>
-        </tr>
-        {% for file_path in files %}
-            <tr>
-                <td><span>{{ file_path }}</span></td>
-                <td>
-                    <img src="{{ file_path }}">
-                </td>
-            </tr>
-
-
-        {% endfor %}
+    <table border="1" id="images">
+        {#        <tr>#}
+        {#            <td><span>sid, ip</span><br></td>#}
+        {#            <td>#}
+        {#                <span>headers</span>#}
+        {#            </td>#}
+        {#        </tr>#}
+        {#        {% for file_path in files %}#}
+        {#            <tr>#}
+        {#                <td><span>{{ file_path }}</span></td>#}
+        {#                <td>#}
+        {#                    <img src="{{ file_path }}">#}
+        {#                </td>#}
+        {#            </tr>#}
+        {##}
+        {##}
+        {#        {% endfor %}#}
     </table>
 </div>
 </body>
