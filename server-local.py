@@ -33,7 +33,7 @@ def build_frame_history():
     m_data = dict()
     for f in glob('frames/*jpg'):
         stamp = int(os.path.basename(f).split('.')[0])
-        print(stamp)
+        # print(stamp)
         date_m = (datetime.utcfromtimestamp(stamp / 1000) + timeOffset).strftime('%Y-%m-%d %H:%M') + ':00'
         min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
         if min_stamp not in m_data.keys():
