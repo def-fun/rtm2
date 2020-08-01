@@ -155,7 +155,7 @@
             option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
             myChart.setOption(option, false, false);
             var t = document.getElementById("images");
-            t.innerHTML = data[timestamp_index].date + "的数据";
+            t.innerHTML = formatDate(data[timestamp_index].min_stamp * 1000) + "的数据";
             for (var i = 0; i < data[timestamp_index].stamps.length; i++) {
                 var tr = document.createElement("tr");
                 var td = document.createElement("td");
@@ -166,25 +166,21 @@
             }
         }
     });
+
+    function formatDate(timestamp_ms) {
+        var date = new Date(timestamp_ms);
+        var YY = date.getFullYear() + '-';
+        var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+        var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
+        var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+        var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+        var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+        return YY + MM + DD + " " + hh + mm + ss;
+    }
 </script>
 <div>
     <table border="1" id="images">
-        {#        <tr>#}
-        {#            <td><span>sid, ip</span><br></td>#}
-        {#            <td>#}
-        {#                <span>headers</span>#}
-        {#            </td>#}
-        {#        </tr>#}
-        {#        {% for file_path in files %}#}
-        {#            <tr>#}
-        {#                <td><span>{{ file_path }}</span></td>#}
-        {#                <td>#}
-        {#                    <img src="{{ file_path }}">#}
-        {#                </td>#}
-        {#            </tr>#}
-        {##}
-        {##}
-        {#        {% endfor %}#}
+
     </table>
 </div>
 </body>
