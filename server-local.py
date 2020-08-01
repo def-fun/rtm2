@@ -5,13 +5,25 @@
 from flask import Flask, send_from_directory, render_template, make_response, jsonify
 import os
 from glob import glob
-from werkzeug.utils import secure_filename
+from flask_httpauth import HTTPBasicAuth
 import json
 from datetime import datetime, timedelta
 import time
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
 timeOffset = timedelta(hours=8)
+users = {
+    'user': 'pwd241'
+}
+
+
+@auth.get_password
+def get_pwd(username):
+    if username in users:
+        return users[username]
+    else:
+        return None
 
 
 def list_files():
@@ -51,6 +63,7 @@ def build_frame_history():
 
 
 @app.route('/files', methods=['GET', ])
+@auth.login_required
 def files():
     files = list_files()[-10:]
     # print(files)
