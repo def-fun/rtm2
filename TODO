@@ -4,6 +4,8 @@
 # 解决时间显示差1h的问题
 
 web页面
-rebuild frames history
+rebuild frames history按钮
 按日期筛选
 抓取目前的图像
+上一分钟、下一分钟按钮
+显示monitor总空间，可用空间
