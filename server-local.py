@@ -41,30 +41,48 @@ def list_stamps():
     return data
 
 
-def build_frame_history():
+def build_frame_history(min_stamp_ms: int):
+    """
+    从frames文件夹中的图片构建data
+    :param min_stamp_ms: 时间戳，单位为秒，时间戳小于该值的图片才会参与构建
+    :return:
+    """
+    print('min_stamp:', min_stamp_ms)
+    t0 = time.time()
     m_data = dict()
-    for f in glob('frames/*jpg'):
+    files = glob('frames/*jpg')
+    files.sort()
+    print('debug1:', time.time() - t0)
+    for f in files:
         stamp = int(os.path.basename(f).split('.')[0])
-        # print(stamp)
-        date_m = (datetime.utcfromtimestamp(stamp / 1000)).strftime('%Y-%m-%d %H:%M') + ':00'
-        min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
-        if min_stamp not in m_data.keys():
-            m_data[min_stamp] = []
-            m_data[min_stamp].append(stamp)
+        if stamp >= min_stamp_ms:
+            date_m = (datetime.utcfromtimestamp(stamp / 1000)).strftime('%Y-%m-%d %H:%M') + ':00'
+            min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
+            if min_stamp not in m_data.keys():
+                m_data[min_stamp] = []
+                m_data[min_stamp].append(stamp)
+            else:
+                m_data[min_stamp].append(stamp)
+    print('debug2:', time.time() - t0)
+    return m_data
+
+
+OLD_FRAME_HISTORY = build_frame_history(0)
+LAST_MIN_TIMESTAMP_MS = max(OLD_FRAME_HISTORY.keys()) * 1000
+
+
+def combine_frames(old: dict, new: dict):
+    for k, v in new.items():
+        if k in old:
+            old[k] = old[k] + new[k]
         else:
-            m_data[min_stamp].append(stamp)
-    data = list()
-    for k, v in m_data.items():
-        data.append({"stamps": v,
-                     "min_stamp": k,
-                     # 'date': (datetime.utcfromtimestamp(k) + timeOffset).strftime('%Y-%m-%d %H:%M') + ':00'
-                     })
-    return data
+            old[k] = new[k]
+    return old
 
 
 @app.route('/files', methods=['GET', ])
 @auth.login_required
-def files():
+def show_files():
     files = list_files()[-10:]
     # print(files)
     return render_template('files.html', files=files)
@@ -85,9 +103,21 @@ def send_static(filename):
 
 @app.route('/api/data')
 def send_api():
-    # return jsonify(list_stamps())
-    return jsonify(build_frame_history())
+    global LAST_MIN_TIMESTAMP_MS
+    global OLD_FRAME_HISTORY
+    LAST_MIN_TIMESTAMP_MS = max(OLD_FRAME_HISTORY.keys()) * 1000
+    OLD_FRAME_HISTORY = combine_frames(OLD_FRAME_HISTORY, build_frame_history(LAST_MIN_TIMESTAMP_MS))
+
+    data = list()
+    t0 = time.time()
+
+    for k, v in OLD_FRAME_HISTORY.items():
+        data.append({"stamps": v,
+                     "min_stamp": k,
+                     })
+    print('debug build:', time.time() - t0)
+    return jsonify(data)
 
 
 if __name__ == '__main__':
-    app.run(port=5011, host='0.0.0.0')
+    app.run(port=5011, host='0.0.0.0', debug=False)
