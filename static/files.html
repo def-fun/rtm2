@@ -23,7 +23,7 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    data = JSON.parse(xhr.response);
+                    data = JSON.parse(xhr.response).sort(sortByItem0);
                     for (let i = 0; i < data.length; i++) {
                         timestamps.push(data[i][0]);
                     }
@@ -208,6 +208,10 @@
 
     function sortByNum(a, b) {
         return a - b
+    }
+
+    function sortByItem0(a, b) {
+        return a[0] - b[0]
     }
 </script>
 <div>
