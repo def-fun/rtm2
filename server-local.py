@@ -116,9 +116,8 @@ def send_api():
     t0 = time.time()
 
     for k, v in OLD_FRAME_HISTORY.items():
-        data.append({"stamps": v,
-                     "min_stamp": k,
-                     })
+        data.append([k, len(v), v])
+        # 整分钟时间戳，帧数，帧时间戳列表
     print('debug build:', time.time() - t0)
     return jsonify(data)
 

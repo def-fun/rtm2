@@ -25,7 +25,7 @@
                 if (xhr.status === 200) {
                     data = JSON.parse(xhr.response);
                     for (let i = 0; i < data.length; i++) {
-                        timestamps.push(data[i].min_stamp);
+                        timestamps.push(data[i][0]);
                     }
                     timestamp_index = timestamps.length - 1;
                     option = {
@@ -73,9 +73,6 @@
                             type: 'slider'
                         }],
                         xAxis: {
-                            data: data.map(function (item) {
-                                return item.min_stamp;
-                            }),
                             axisLabel: {
                                 textStyle: {
                                     color: 'rgba(2,1,29)',
@@ -105,15 +102,23 @@
                             },
                         },
                         series: [{
+                            name: '帧数据',
                             type: 'bar',
-                            data: data.map(function (item) {
-                                return [item.min_stamp, item.stamps.length];
-                            }),
                             barWidth: '100%',
                             barGap: '0%',
                             animation: false,
                             // Set `large` for large data amount
                             large: false,
+                            data: data.map(function (item) {
+                                return [item[0] * 1000, item[1]];
+                            }),
+                            markArea: {
+                                silent: true,
+                                data: [],
+                                itemStyle: {
+                                    color: '#c8edf9'
+                                }
+                            },
                             markLine: {
                                 symbol: 'circle',
                                 label: {
@@ -142,7 +147,7 @@
                         }
                     });
                     view_this(timestamp_index);
-
+                    plotDaysArea();
                 }
             }
 
@@ -153,16 +158,31 @@
 
     });
 
+    function plotDaysArea() {
+        let endDate = new Date(Math.max.apply(null, timestamps) * 1000);
+        let startDate = new Date(Math.min.apply(null, timestamps) * 1000);
+        let i = 0;
+        for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+            i++;
+            if (i % 2 === 0) {
+                let day_stamp = new Date(d.toLocaleDateString()).getTime();
+                console.log(i, d, day_stamp);
+                option.series[0].markArea.data.push([{xAxis: day_stamp}, {xAxis: day_stamp + 86400000}]);
+            }
+        }
+        myChart.setOption(option, false, false);
+    }
+
     function view_this(timestamp_index) {
         option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
         myChart.setOption(option, false, false);
-        var sorted_stamps = data[timestamp_index].stamps;
+        const sorted_stamps = data[timestamp_index][2];
         sorted_stamps.sort(sortByNum)
-        var t = document.getElementById("images");
-        t.innerHTML = formatDate(data[timestamp_index].min_stamp * 1000) + " - " + sorted_stamps.length + "帧";
-        for (var i = 0; i < sorted_stamps.length; i++) {
-            var tr = document.createElement("tr");
-            var td = document.createElement("td");
+        const t = document.getElementById("images");
+        t.innerHTML = formatDate(data[timestamp_index][0] * 1000) + " - " + sorted_stamps.length + "帧";
+        for (let i = 0; i < sorted_stamps.length; i++) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
             // td.innerHTML = "数据: " + data[timestamp_index].stamps[i];
             td.innerHTML = '<img  src="/frames/' + sorted_stamps[i] + '.jpg" alt="img">';
             tr.appendChild(td);
