@@ -174,7 +174,7 @@
     }
 
     function view_this(timestamp_index) {
-        option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
+        option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index] * 1000;
         myChart.setOption(option, false, false);
         const sorted_stamps = data[timestamp_index][2];
         sorted_stamps.sort(sortByNum)
