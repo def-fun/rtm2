@@ -7,7 +7,6 @@
     <script src="/static/echarts.js"></script>
 </head>
 <body>
-{#<h2><span><a href="/">charts page</a>    <a href="/static/alarm.html">alarm page</a></span></h2>#}
 <div id="main" style="width: 100%;height:30%;min-height: 300px"></div>
 
 <script type="application/javascript">
@@ -133,7 +132,6 @@
                     };
                     myChart.setOption(option, false, false);
                     myChart.hideLoading();
-                    {#view_this(timestamp_index);#}
                     window.onresize = myChart.resize; // resize myChart when window size changed
                     myChart.on('click', function (obj) {
                         console.log(obj);
@@ -154,13 +152,15 @@
         function view_this(timestamp_index) {
             option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
             myChart.setOption(option, false, false);
+            var sorted_stamps = data[timestamp_index].stamps;
+            sorted_stamps.sort(sortByNum)
             var t = document.getElementById("images");
-            t.innerHTML = formatDate(data[timestamp_index].min_stamp * 1000) + "的数据";
-            for (var i = 0; i < data[timestamp_index].stamps.length; i++) {
+            t.innerHTML = formatDate(data[timestamp_index].min_stamp * 1000) + " - " +  sorted_stamps.length + "帧";
+            for (var i = 0; i < sorted_stamps.length; i++) {
                 var tr = document.createElement("tr");
                 var td = document.createElement("td");
                 // td.innerHTML = "数据: " + data[timestamp_index].stamps[i];
-                td.innerHTML = '<img src="' + '/frames/' + data[timestamp_index].stamps[i] + '.jpg"' + '>';
+                td.innerHTML = '<img  src="' + '/frames/' + sorted_stamps[i] + '.jpg" alt="img">';
                 tr.appendChild(td);
                 t.appendChild(tr);
             }
@@ -177,9 +177,12 @@
         var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
         return YY + MM + DD + " " + hh + mm + ss;
     }
+    function sortByNum(a,b){
+        return a - b
+    }
 </script>
 <div>
-    <table border="1" id="images">
+    <table id="images" style="border: 1px">
 
     </table>
 </div>

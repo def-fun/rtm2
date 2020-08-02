@@ -2,15 +2,17 @@
 """
 在树莓派上运行的http server，用于提供对截图、视频的访问
 """
-from flask import Flask, send_from_directory, render_template, make_response, jsonify
+from flask import Flask, send_from_directory, make_response, jsonify
 import os
 from glob import glob
 from flask_httpauth import HTTPBasicAuth
+from flask_compress import Compress
 import json
 from datetime import datetime, timedelta
 import time
 
 app = Flask(__name__)
+Compress(app)
 auth = HTTPBasicAuth()
 timeOffset = timedelta(hours=8)
 users = {
@@ -83,17 +85,17 @@ def combine_frames(old: dict, new: dict):
 @app.route('/files', methods=['GET', ])
 @auth.login_required
 def show_files():
-    files = list_files()[-10:]
     # print(files)
-    return render_template('files.html', files=files)
+    return send_from_directory('static', 'files.html')
 
 
 @app.route('/frames/<string:filename>', methods=['GET'])
 def show_photo(filename):
-    image_data = open(os.path.join('frames', filename), "rb").read()
-    response = make_response(image_data)
-    response.headers['Content-Type'] = 'image/jpg'
-    return response
+    # image_data = open(os.path.join('frames', filename), "rb").read()
+    # response = make_response(image_data)
+    # response.headers['Content-Type'] = 'image/jpg'
+    # return response
+    return send_from_directory('frames', filename)
 
 
 @app.route('/static/<string:filename>')
