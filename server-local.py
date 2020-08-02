@@ -58,8 +58,10 @@ def build_frame_history(min_stamp_ms: int):
     for f in files:
         stamp = int(os.path.basename(f).split('.')[0])
         if stamp >= min_stamp_ms:
-            date_m = (datetime.utcfromtimestamp(stamp / 1000)).strftime('%Y-%m-%d %H:%M') + ':00'
-            min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
+            # a python bug
+            # date_m = (datetime.utcfromtimestamp(stamp / 1000)).strftime('%Y-%m-%d %H:%M') + ':00'
+            # min_stamp = int(time.mktime(time.strptime(date_m, "%Y-%m-%d %H:%M:%S")))
+            min_stamp = stamp // 60000 * 60
             if min_stamp not in m_data.keys():
                 m_data[min_stamp] = []
                 m_data[min_stamp].append(stamp)

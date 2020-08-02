@@ -141,6 +141,7 @@
                             view_this(timestamp_index); // show frame and mark it in chart
                         }
                     });
+                    view_this(timestamp_index);
 
                 }
             }
@@ -149,35 +150,43 @@
         xhr.open('get', '/api/data', true);
         xhr.send(null);
 
-        function view_this(timestamp_index) {
-            option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
-            myChart.setOption(option, false, false);
-            var sorted_stamps = data[timestamp_index].stamps;
-            sorted_stamps.sort(sortByNum)
-            var t = document.getElementById("images");
-            t.innerHTML = formatDate(data[timestamp_index].min_stamp * 1000) + " - " +  sorted_stamps.length + "帧";
-            for (var i = 0; i < sorted_stamps.length; i++) {
-                var tr = document.createElement("tr");
-                var td = document.createElement("td");
-                // td.innerHTML = "数据: " + data[timestamp_index].stamps[i];
-                td.innerHTML = '<img  src="' + '/frames/' + sorted_stamps[i] + '.jpg" alt="img">';
-                tr.appendChild(td);
-                t.appendChild(tr);
-            }
-        }
+
     });
 
-    function formatDate(timestamp_ms) {
-        var date = new Date(timestamp_ms);
-        var YY = date.getFullYear() + '-';
-        var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
-        var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
-        var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
-        var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
-        var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
-        return YY + MM + DD + " " + hh + mm + ss;
+    function view_this(timestamp_index) {
+        option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index];
+        myChart.setOption(option, false, false);
+        var sorted_stamps = data[timestamp_index].stamps;
+        sorted_stamps.sort(sortByNum)
+        var t = document.getElementById("images");
+        t.innerHTML = formatDate(data[timestamp_index].min_stamp * 1000) + " - " + sorted_stamps.length + "帧";
+        for (var i = 0; i < sorted_stamps.length; i++) {
+            var tr = document.createElement("tr");
+            var td = document.createElement("td");
+            // td.innerHTML = "数据: " + data[timestamp_index].stamps[i];
+            td.innerHTML = '<img  src="/frames/' + sorted_stamps[i] + '.jpg" alt="img">';
+            tr.appendChild(td);
+            t.appendChild(tr);
+        }
     }
-    function sortByNum(a,b){
+
+
+    function add0(m) {
+        return m < 10 ? '0' + m : m
+    }
+
+    function formatDate(timestamp_ms) {
+        const time = new Date(timestamp_ms);
+        const y = time.getFullYear();
+        const m = time.getMonth() + 1;
+        const d = time.getDate();
+        const h = time.getHours();
+        const mm = time.getMinutes();
+        const s = time.getSeconds();
+        return y + '-' + add0(m) + '-' + add0(d) + ' ' + add0(h) + ':' + add0(mm) + ':' + add0(s);
+    }
+
+    function sortByNum(a, b) {
         return a - b
     }
 </script>
