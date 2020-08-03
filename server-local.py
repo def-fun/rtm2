@@ -73,6 +73,7 @@ def build_frame_history(min_stamp_ms: int):
 
 OLD_FRAME_HISTORY = build_frame_history(0)
 LAST_MIN_TIMESTAMP_MS = max(OLD_FRAME_HISTORY.keys()) * 1000
+# frames目录下没有数据时会出错
 
 
 def combine_frames(old: dict, new: dict):

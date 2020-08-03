@@ -19,11 +19,18 @@
     let timestamps = [];
     let timestamp_index = 0;
     let data;
+    // let shadowData = [];
     $(document).ready(function () {
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     data = JSON.parse(xhr.response).sort(sortByItem0);
+                    // var yMax = Math.max.apply(null, data.map(function (item) {
+                    //     return item[1];
+                    // }));
+                    // for (var i = 0; i < data.length; i++) {
+                    //     shadowData.push([data[i][0] * 1000, yMax]);
+                    // }
                     for (let i = 0; i < data.length; i++) {
                         timestamps.push(data[i][0]);
                     }
@@ -34,14 +41,6 @@
                             left: 'center'
                         },
                         toolbox: {
-                            // feature: {
-                            //     dataZoom: {
-                            //        yAxisIndex: false
-                            //   },
-                            // saveAsImage: {
-                            //   pixelRatio: 2
-                            //      }
-                            //}
                             feature: {
                                 dataView: {
                                     show: true
@@ -64,8 +63,8 @@
                             }
                         },
                         grid: {
-                            x: 50,
-                            x2: 30,
+                            x: 40,
+                            x2: 40,
                         },
                         dataZoom: [{
                             type: 'inside'
@@ -109,6 +108,11 @@
                             animation: false,
                             // Set `large` for large data amount
                             large: false,
+                            emphasis: {
+                                itemStyle: {
+                                    color: '#ffd918'
+                                }
+                            },
                             data: data.map(function (item) {
                                 return [item[0] * 1000, item[1]];
                             }),
@@ -133,7 +137,18 @@
                                     xAxis: timestamps[timestamps.length - 1]
                                 }]
                             }
-                        }]
+                        },
+                            // { // For shadow
+                            //     type: 'bar',
+                            //     itemStyle: {
+                            //         color: 'rgba(0,0,0,0.05)'
+                            //     },
+                            //     barGap: '-100%',
+                            //     barCategoryGap: '40%',
+                            //     data: shadowData,
+                            //     animation: false
+                            // },
+                        ]
                     };
                     myChart.setOption(option, false, false);
                     myChart.hideLoading();
@@ -177,7 +192,7 @@
         option.series[0].markLine.data[0].xAxis = timestamps[timestamp_index] * 1000;
         myChart.setOption(option, false, false);
         const sorted_stamps = data[timestamp_index][2];
-        sorted_stamps.sort(sortByNum)
+        sorted_stamps.sort(sortByNum);
         const t = document.getElementById("images");
         t.innerHTML = formatDate(data[timestamp_index][0] * 1000) + " - " + sorted_stamps.length + "帧";
         for (let i = 0; i < sorted_stamps.length; i++) {
