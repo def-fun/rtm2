@@ -5,9 +5,15 @@
     <title>show files</title>
     <script src="/static/jquery-1.12.4.min.js"></script>
     <script src="/static/echarts.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/myCSS.css">
 </head>
 <body>
 <div id="main" style="width: 100%;height:30%;min-height: 300px"></div>
+<div>
+    <button class="myButton" onclick="show_previous()">前进一分钟</button>
+    <button class="myButton" onclick="show_next()">后退一分钟</button>
+</div>
+
 
 <script type="application/javascript">
     const myChart = echarts.init(document.getElementById('main'));
@@ -19,7 +25,26 @@
     let timestamps = [];
     let timestamp_index = 0;
     let data;
+
     // let shadowData = [];
+    function show_next() {
+        if (timestamp_index < timestamps.length - 1) {
+            timestamp_index += 1;
+        } else {
+            alert('已到达最近的1分钟')
+        }
+        view_this(timestamp_index)
+    }
+
+    function show_previous() {
+        if (timestamp_index > 0) {
+            timestamp_index -= 1;
+        } else {
+            alert('已到达最开始的1分钟')
+        }
+        view_this(timestamp_index)
+    }
+
     $(document).ready(function () {
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
