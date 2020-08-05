@@ -2,6 +2,9 @@
 # 优化加载速度
 # 解决图片乱序问题
 # 解决时间显示差1h的问题
+初次启动时保存当前画面
+以多线程的方式发送report以及upload
+
 
 web页面
 rebuild frames history按钮

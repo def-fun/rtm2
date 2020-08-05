@@ -73,7 +73,7 @@ def upload(image_path, timestamp, try_count=0):
 
 
 def report(timestamp, info, try_count=0):
-    return
+    # return
     try_count += 1
     if try_count > 3:
         return
@@ -120,7 +120,7 @@ def main():
         if diff.count > 0:  # send frames and notices when motion detected.
             print('diff: {}, area: {}'.format(diff.count, diff.area))
             timestamp = round(time.time() * 1000)  # ms
-            # report(timestamp, info='move', try_count=0)
+            report(timestamp, info='move', try_count=0)
             if timestamp / 1000 - min_stamp < 60:
                 stamps['stamps'].append(timestamp)
             else:
@@ -143,7 +143,7 @@ def main():
             bg = get_frame()
         else:
             if time.time() - last_report_at > 0.5:
-                report(time.time(), 'online', try_count=0)
+                # report(time.time(), 'online', try_count=0)
                 last_report_at = time.time()
         # except Exception as e:
         #     print(e)
