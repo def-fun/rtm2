@@ -12,3 +12,6 @@ rebuild frames history按钮
 抓取目前的图像
 上一分钟、下一分钟按钮
 显示monitor总空间，可用空间
+
+
+各个monitor加入至server的数据库中，在同一个web页面可以查看多个monitor

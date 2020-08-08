@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+pip3 install opencv-contrib-python==4.1.0.25
 首次联网时，向服务器发送系统情况
 在线通知
 检测到动作时，立刻向服务器汇报，汇报完成后发送画面
