@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""
+server.py
+作用：接收从monitor发送来的数据；将数据展示给client
+     （不存储图片、视频）
+部署：mongodb，运行在具有公网IP的机器上t
+
+"""
 from flask import Flask, request
 import os
 from werkzeug.utils import secure_filename
