@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 在树莓派上运行的http server，用于提供对截图、视频的访问
+# todo 默认只展示当天及前一天的数据，以优化访问速度
 """
 from flask import Flask, send_from_directory, make_response, jsonify
 import os
