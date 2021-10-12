@@ -1,6 +1,6 @@
 Flask==1.1.1
 Flask_SocketIO==4.2.1
-opencv_python==4.1.2.30
+opencv_python==4.2.0.32
 requests==2.22.0
 Flask_Compress==1.4.0
 Flask_HTTPAuth==3.3.0
